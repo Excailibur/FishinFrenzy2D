@@ -10,22 +10,39 @@ public class UncommonFish : Fish
     {
         Debug.Log("Picking new destination for UncommonFish.");
 
+        RaycastHit2D hit;
         float range = Random.Range(minRange, maxRange);
-        Vector2 destination;
+        Vector2 targetPoint;
+        Vector2 debugDirection;
 
+        //Check for obstacles within range and if not in range set target point to max range
         if(isFlipped)
         {
-            destination = transform.position + Vector3.left * range;
-
+            hit = Physics2D.Raycast(transform.position, Vector2.left, range, obstacleLayer);
+            targetPoint = (Vector2)transform.position + Vector2.left * range;
         }
         else
         {
-            destination = transform.position + Vector3.right * range;
+            hit = Physics2D.Raycast(transform.position, Vector2.right, range, obstacleLayer);
+            targetPoint = (Vector2)transform.position + Vector2.right * range;
         }
 
-        Vector2 debugDirection = destination - (Vector2)transform.position;
-        Debug.DrawRay(transform.position, debugDirection, Color.red, 1f);
-        return destination;
+        //Prevent wall clipping
+        if (hit.collider != null)
+        {
+            Debug.Log($"Obstacle detected, adjusting target point {hit.collider.name}");
+            debugDirection = (Vector3) hit.point - transform.position;
+            Debug.DrawRay(transform.position, debugDirection, Color.red, 1f);
+            targetPoint = hit.point;
+        }
+        else
+        {
+            debugDirection = targetPoint - (Vector2)transform.position;
+            Debug.DrawRay(transform.position, debugDirection, Color.green, 1f);
+            Debug.Log("No obstacle detected, moving to target point.");
+        }
+
+        return targetPoint;
     }
 
     protected override IEnumerator MoveTo(Vector3 position)
